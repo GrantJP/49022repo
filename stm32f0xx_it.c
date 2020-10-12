@@ -145,19 +145,89 @@ void SysTick_Handler(void)
 void EXTI4_15_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI4_15_IRQn 0 */
-	if ( (EXTI->PR & EXTI_PR_PR8_Msk) == EXTI_PR_PR8_Msk){
-				GPIOC->BSRR |= 0x00000020; //power PC5
+	//start with debouncing
+	int i;
+	int downCycles = 0;
+	for (i=0;i<1000;i++){
+		if( ((GPIOC->IDR & (GPIO_IDR_4|GPIO_IDR_5)) | ( GPIOA->IDR & (GPIO_IDR_12|GPIO_IDR_13)) ) != 0){
+			downCycles++;
 		}
-	if ( (EXTI->PR & EXTI_PR_PR7_Msk) == EXTI_PR_PR7_Msk){
-			GPIOC->BSRR |= 0x00200000; //stop powering PC5
 	}
 
+	if (downCycles >=900){
+		//reset
+		if ( (EXTI->PR & EXTI_PR_PR4_Msk) == EXTI_PR_PR4_Msk){
+			int resetCycles = 0;
+			for (i=0;i<50000;i++){
+				if((GPIOC->IDR & GPIO_IDR_4) != 0){
+					resetCycles++;
+				}
+				if (resetCycles<i*.99-5){
+					break;
+				}
+			}
+			if (resetCycles > 49000){
+				  scoreA = 0;
+				  scoreB = 0;
 
-	//GPIOC->BSRR |= 0x00000020;
-	EXTI->PR &= ~(EXTI_PR_PR7_Msk|EXTI_PR_PR8_Msk);
+				  bagsHoleA = 0;
+				  bagsHoleB = 0;
+
+				  bagsBoardA = 0;
+				  bagsBoardB = 0;
+				//bagcounts
+			}
+		}
+
+
+		//increment
+	if ( (EXTI->PR & EXTI_PR_PR12_Msk) == EXTI_PR_PR12_Msk){
+				//GPIOC->BSRR |= 0x00000020; //power PC5
+				if ((GPIOA->IDR & GPIO_IDR_11) ==GPIO_IDR_11){
+					scoreA += 1;
+					if (scoreA > 32) {
+									scoreA = 32;
+								}
+				}
+				else{
+					scoreB += 1;
+					if (scoreB > 32) {
+										scoreB = 32;
+									}
+					}
+				}
+
+		//decrement
+	if ( (EXTI->PR & EXTI_PR_PR13_Msk) == EXTI_PR_PR13_Msk){
+		if ((GPIOA->IDR & GPIO_IDR_11) ==GPIO_IDR_11){
+						scoreA -= 1;
+						if (scoreA < 0) {
+											scoreA = 0;
+										}
+						}
+						else{
+							scoreB -= 1;
+							if (scoreB < 0) {
+												scoreB = 0;
+											}
+							}
+
+	}
+	if ( (EXTI->PR & EXTI_PR_PR5_Msk) == EXTI_PR_PR5_Msk){
+		//call RFID sensor function
+		ComputeScore();
+
+	}
+
+		//compute score
+
+	DisplayScore();
+	}
   /* USER CODE END EXTI4_15_IRQn 0 */
-  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_7);
-  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_8);
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_4);
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_5);
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_12);
+  HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_13);
   /* USER CODE BEGIN EXTI4_15_IRQn 1 */
 
   /* USER CODE END EXTI4_15_IRQn 1 */

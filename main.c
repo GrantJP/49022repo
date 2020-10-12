@@ -42,23 +42,14 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-int scoreA = 0;
-int scoreB = 0;
 
-int bagsHoleA = 0;
-int bagsHoleB = 0;
-
-int bagsBoardA = 0;
-int bagsBoardB = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 /* USER CODE BEGIN PFP */
-void DisplayScore(void);
-void DisplayNumA10(int);
-void DiplayBlank(void);
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -95,30 +86,31 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   /* USER CODE BEGIN 2 */
+  scoreA = 0;
+  scoreB = 0;
 
+  bagsHoleA = 0;
+  bagsHoleB = 0;
+
+  bagsBoardA = 0;
+  bagsBoardB = 0;
+
+//test vals
+  bagsHoleA = 2;
+  bagsHoleB = 1;
+
+  bagsBoardA = 2;
+  bagsBoardB = 2;
+
+  scoreA = 5;
+  scoreB = 3;
+  DisplayScore();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  int i;
   while (1)
   {
-	  for(i=0;i<1000000;i++){
-		  ;
-	  }
-	  DisplayNumA10(7);
-	  for(i=0;i<1000000;i++){
-		  ;
-	  }
-	  DisplayNumA10(0);
-	  for(i=0;i<1000000;i++){
-		  ;
-	  }
-	  DisplayNumA10(5);
-	  for(i=0;i<1000000;i++){
-		  ;
-	  }
-	  DisplayBlank();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -170,31 +162,57 @@ static void MX_GPIO_Init(void)
   GPIO_InitTypeDef GPIO_InitStruct = {0};
 
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_12|GPIO_PIN_13
-                          |GPIO_PIN_14|GPIO_PIN_15, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15|GPIO_PIN_0
+                          |GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_10
+                          |GPIO_PIN_11|GPIO_PIN_12, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_8|GPIO_PIN_9, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PB10 PB11 PB12 PB13
-                           PB14 PB15 */
-  GPIO_InitStruct.Pin = GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_12|GPIO_PIN_13
-                          |GPIO_PIN_14|GPIO_PIN_15;
+  /*Configure GPIO pins : PC13 PC14 PC15 PC0
+                           PC1 PC2 PC3 PC10
+                           PC11 PC12 */
+  GPIO_InitStruct.Pin = GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15|GPIO_PIN_0
+                          |GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_10
+                          |GPIO_PIN_11|GPIO_PIN_12;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PC4 PC5 */
+  GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_5;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PA11 */
+  GPIO_InitStruct.Pin = GPIO_PIN_11;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PA12 PA13 */
+  GPIO_InitStruct.Pin = GPIO_PIN_12|GPIO_PIN_13;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PB4 PB5 PB8 PB9 */
+  GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_8|GPIO_PIN_9;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PC9 */
-  GPIO_InitStruct.Pin = GPIO_PIN_9;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI4_15_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI4_15_IRQn);
 
 }
 
@@ -202,29 +220,102 @@ static void MX_GPIO_Init(void)
 void DisplayScore(){
 //while scoreA|scoreB >= 21     flash winner score(loop display off, display num)
 	//otherwise
-	//DisplayNumA10(scoreA/10);
+	//DisplayNumA10((scoreA/10)%10);
+	DisplayNumA10(scoreA%10);
+	//DisplayNumB10((scoreB/10)%10);
+	DisplayNumB1(scoreB%10);
 
 }
 
 void DisplayNumA10(int num){
+	//clockwise from top, A:PC12  B:PC11  C:PC10  D:PB4  E:PB5  F:PB9  G:PB8
     switch(num){
-    case 0: GPIOB->BSRR |= 0xBC004000;
-            GPIOC->BSRR |= 0x02000000;
+    case 0: GPIOB->BSRR |= 0x02300100;
+            GPIOC->BSRR |= 0x1C000000;
             break;
-    case 7: GPIOB->BSRR |= 0x1C00E000;
-            GPIOC->BSRR |= 0x00000200;
+    case 1: GPIOB->BSRR |= 0x00000330;
+            GPIOC->BSRR |= 0x0C001000;
+            break;
+    case 2: GPIOB->BSRR |= 0x01300200;
+            GPIOC->BSRR |= 0x18000400;
+            break;
+    case 3: GPIOB->BSRR |= 0x01100220;
+            GPIOC->BSRR |= 0x1C000000;
+            break;
+    case 4: GPIOB->BSRR |= 0x03000030;
+            GPIOC->BSRR |= 0x0C001000;
+            break;
+    case 5: GPIOB->BSRR |= 0x03100020;
+            GPIOC->BSRR |= 0x14000800;
+            break;
+    case 6: GPIOB->BSRR |= 0x03300000;
+            GPIOC->BSRR |= 0x14000800;
+            break;
+    case 7: GPIOB->BSRR |= 0x00000330;
+            GPIOC->BSRR |= 0x1C000000;
+            break;
+    case 8: GPIOB->BSRR |= 0x03300000;
+            GPIOC->BSRR |= 0x1C000000;
+            break;
+    case 9: GPIOB->BSRR |= 0x03100020;
+            GPIOC->BSRR |= 0x1C000000;
             break;
 
-    default:GPIOB->BSRR |= 0xFC000000;
-            GPIOC->BSRR |= 0x02000000;
+    default: GPIOB->BSRR |= 0x03300000;
+            GPIOC->BSRR |= 0x1C000000;
+            break;
     }
 }
 
-void DisplayBlank(){
+
+void DisplayNumB1(int num){
+	//clockwise from top, A:PC13  B:PC14  C:PC15  D:PC3  E:PC2  F:PC0  G:PC1
+    switch(num){
+    case 0: GPIOC->BSRR |= 0xE00D0002;
+            break;
+    case 1: GPIOC->BSRR |= 0xC000200F;
+            break;
+    case 2: GPIOC->BSRR |= 0x600E8001;
+            break;
+    case 3: GPIOC->BSRR |= 0xE00A0005;
+            break;
+    case 4: GPIOC->BSRR |= 0xC003200C;
+            break;
+    case 5: GPIOC->BSRR |= 0xA00B4004;
+            break;
+    case 6: GPIOC->BSRR |= 0xA00F4000;
+            break;
+    case 7: GPIOC->BSRR |= 0xE000000F;
+            break;
+    case 8: GPIOC->BSRR |= 0xE00F0000;
+            break;
+    case 9: GPIOC->BSRR |= 0xE00B0004;
+            break;
+    default: GPIOC->BSRR |= 0xE00F0000;
+            break;
+    }
+
+}
+
+
+void DisplayBlank(){//will take team as argument
 	GPIOB->BSRR |= 0x0000FC00;
 	GPIOC->BSRR |= 0x00000200;
 }
 
+void ComputeScore(){
+	int roundA = bagsBoardA + 3*bagsHoleA;
+	int roundB = bagsBoardB + 3*bagsHoleB;
+	if (roundA > roundB){
+		scoreA += roundA-roundB;
+		//scorer = A
+	}
+	else{
+		roundB += roundB-roundA;
+		//scorer = B
+	}
+	//reset some vars
+}
 /* USER CODE END 4 */
 
 /**
