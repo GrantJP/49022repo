@@ -1,3 +1,4 @@
 # 49022repo
 
-This repository currently contains a few pieces miscellaneous pieces of code that I have tested that work with certain library and do not really stand alone. This should be updated later to get teammates' code and contain the full code base.
+The code for this project was developed in the STM32CubeIDE.
+The folder named demo holds the code from the midterm demo, the folder named final has the latest draft.
